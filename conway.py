@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-A simple Python implementation Conway's Game of Life I whipped up in a few
-hours. Not intended to be memory efficient.
+A simple Python implementation of Conway's Game of Life whipped up in a few
+hours. The algorithm is not intended to be memory efficient, but may serve as a
+reference for learning other object-oriented languages.
 
 https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 
@@ -73,41 +74,31 @@ class Board:
 
     def neighbours(self, cell: Cell) -> int:
         """determine number of neighbours of <cell>"""
-        nei = 0
 
-        # get the 3x3 surrounding cells
-        #
-        #   0 1 2 3 4
-        # 0 . . . . .
-        # 1 . . . . .
-        # 2 . X . . .	x=1,y=2
-        # 3 . . . . .
-        # 4 . . . . .
-        #
-        # the cell with coords 1,2 is accessed via board[2][1]
-        # surely there is a better way to do this
+        def get_subgrid(
+            left: int,
+            right: int,
+            top: int,
+            bottom: int,
+        ):
+            return [row[left : right + 1] for row in self.board[top : bottom + 1]]
 
-        if cell.ypos > 0:
-            # row above cell
-            row_above = self.board[cell.ypos - 1]
-            for ncell in row_above[cell.xpos - 1 : cell.xpos + 1]:
-                if ncell.alive:
-                    nei += 1
+        left, right = cell.xpos - 1, cell.xpos + 1
+        top, bottom = cell.ypos - 1, cell.ypos + 1
 
-        row = self.board[cell.ypos]
-        if cell.xpos > 0 and row[cell.xpos - 1].alive:
-            nei += 1
-        if cell.xpos < board.width - 1 and row[cell.xpos + 1].alive:
-            nei += 1
+        # wrap to bounds of board
+        if left == -1:
+            left += 1
+        if right == self.width:
+            right -= 1
 
-        if cell.ypos < board.height - 1:
-            # row below cell
-            row_below = self.board[cell.ypos + 1]
-            for ncell in row_below[cell.xpos - 1 : cell.xpos + 1]:
-                if ncell.alive:
-                    nei += 1
+        if top == -1:
+            top += 1
+        if bottom == self.width:
+            bottom -= 1
 
-        return nei
+        sub = get_subgrid(left, right, top, bottom)
+        return sum(cell.alive for row in sub for cell in row) - cell.alive
 
     def advance(self):
         """
