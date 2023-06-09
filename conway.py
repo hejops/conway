@@ -55,14 +55,16 @@ class Board:
         assert height > 0
         self.width = width
         self.height = height
-        self.board = [
-            [
+        self.board = tuple(
+            tuple(
                 Cell(x, y, density)
                 #
                 for x in range(self.width)
-            ]
+            )
             for y in range(self.height)
-        ]
+        )
+        self.age = 0
+        self.states = (hash(self.board),)
 
     @staticmethod
     def print_row(row) -> str:
@@ -129,6 +131,28 @@ class Board:
         self.board = new_board
         del new_board
 
+        self.age += 1
+        self.states += (hash(self.board),)
+
+        # keep last 30 states
+        self.states = self.states[-30:]
+
+        # pprint(self.states)
+        if self.age > 30 and len(set(self.states)) < 5:
+            end()
+
+
+def end():
+    """Terminate board iteration"""
+    outname = os.path.join(
+        os.path.dirname(__file__),
+        "conway.txt",
+    )
+    with open(outname, "w", encoding="utf-8") as f:
+        f.writelines(str(board))
+    print(f"The end; wrote to {outname}.")
+    sys.exit()
+
 
 if __name__ == "__main__":
     size = os.get_terminal_size()
@@ -153,11 +177,4 @@ if __name__ == "__main__":
             time.sleep(0.05)
             board.advance()
     except KeyboardInterrupt:
-        OUTNAME = os.path.join(
-            os.path.dirname(__file__),
-            "conway.txt",
-        )
-        with open(OUTNAME, "w", encoding="utf-8") as f:
-            f.writelines(str(board))
-        print(f"The end; wrote to {OUTNAME}.")
-        sys.exit()
+        end()
